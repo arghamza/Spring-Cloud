@@ -15,7 +15,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.hateoas.PagedModel;
 
-import javax.xml.crypto.Data;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Random;
@@ -32,19 +32,27 @@ public class BillingServiceApplication {
     CommandLineRunner start(BillRepository billRepository, ProductItemRepository productItemRepository,
                             CustomerRestClient customerRestClient, ProductItemRestClient productItemRestClient)
     {
-     return args -> {
-         Customer customer=customerRestClient.getCustomerById(2L);
-         Bill bill=billRepository.save(new Bill(null,new Date(),null,customer.getId(),null));
-         PagedModel<Product> productPagedModel=productItemRestClient.pageProducts();
-         productPagedModel.forEach(p->{
-             ProductItem productItem=new ProductItem();
-             productItem.setPrice(p.getPrice());
-             productItem.setQuantity(1+new Random().nextInt(100));
-             productItem.setBill(bill);
-             productItem.setProductId(p.getId());
-             productItemRepository.save(productItem);
-         });
-
-     };
+        return args -> {
+            for (long i = 1L; i < 4L; i++) {
+                Customer customer = customerRestClient.getCustomerById(i);
+                Bill bill = billRepository.save(new Bill(null, new Date(),null,customer.getId()));
+                Collection<ProductItem> productItems = new ArrayList<>();
+                PagedModel<Product> pagedProducts = productItemRestClient.pageProducts();
+                pagedProducts.forEach(product -> {
+                    if(Math.random()>=0.5){
+                        ProductItem productItem = new ProductItem();
+                        productItem.setProductName(product.getName());
+                        productItem.setPrice(product.getPrice());
+                        productItem.setQuantity(1 + new Random().nextInt(100));
+                        productItem.setBill(bill);
+                        productItem.setProductId(product.getId());
+                        productItemRepository.save(productItem);
+                        productItems.add(productItem);
+                    }
+                });
+                bill.setProductItems(productItems);
+                billRepository.save(bill);
+            }
+        };
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -27,15 +28,15 @@ public class InventoryServiceApplication {
     CommandLineRunner start(ProductRepository productRepository, RepositoryRestConfiguration restConfiguration){
         restConfiguration.exposeIdsFor(Product.class);
         return args -> {
-            productRepository.save(new Product(null,"Ordinateur",788,15));
-            productRepository.save(new Product(null,"TEl",2254,157));
-            productRepository.save(new Product(null,"TELE",224,425));
-            productRepository.findAll().forEach(product -> {
-                System.out.println(product.toString());
-            });
+            productRepository.save(new Product(null,"Ordinateur",788,false,15));
+            productRepository.save(new Product(null,"Telephone",2254,true,157));
+            productRepository.save(new Product(null,"Television",224,false,425));
+            productRepository.findAll().forEach(product -> System.out.println(product.toString()));
         };
     }
+
 }
+
 
 @Entity
 @Data@NoArgsConstructor@AllArgsConstructor@ToString
@@ -46,9 +47,11 @@ class Product{
     private Long id;
     private String name;
     private double price;
+    private boolean promotion;
     private double quantity;
 }
-@RepositoryRestResource
-interface ProductRepository extends JpaRepository<Product,Long>{
 
+@RepositoryRestResource
+@CrossOrigin("*")
+interface ProductRepository extends JpaRepository<Product,Long>{
 }
